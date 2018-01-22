@@ -166,6 +166,20 @@ check-config(){
 }
 
 
+#полный мониторинг всех контейнеров
+#Как это работает:
+#Prometheus (метрическая база данных) http://localhost:9090
+#AlertManager (управление оповещениями) http://localhost:9093
+#Grafana (визуализация метрик) http://localhost:3000
+#NodeExporter (сборщик хостовых метрик);
+#cAdvisor (сборщик метрик контейнеров).
+get-monitor(){
+git clone https://github.com/loisoj/dockermonitoring
+cd dockermonitoring
+docker-compose up -d
+}
+
+
 
 create(){
     if [ ! -d "$APP_DIR" ]; then
