@@ -1,3 +1,32 @@
+
+Skip to content
+This repository
+
+    Pull requests
+    Issues
+    Marketplace
+    Explore
+
+    @loisoj
+
+3
+9
+
+    5
+
+maxim-avramenko/yupe-docker
+Code
+Issues 0
+Pull requests 2
+Projects 0
+Wiki
+Insights
+yupe-docker/yupe
+01474b1 Jan 17, 2018
+@loisoj loisoj prod chmod fix
+@maxim-avramenko
+@loisoj
+343 lines (320 sloc) 12.1 KB
 #!/usr/bin/env bash
 #==================================================================================
 # имя файла скрипта на всякий случай
@@ -87,6 +116,26 @@ check-dir(){
         exit 1
     fi
 }
+
+#Устанавливает полностью yupe-docker в dev окружении, исправляет проблемму которая возникала из за прав доступа к config/db.php при установке CMS
+alive(){
+  echo "Setting up new application environment to: dev"
+  if [ -f ./docker/env/app_env ]; then
+      CURRENT_ENV=`cat ./docker/env/app_env`
+      docker-compose -f common.yml -f dev.yml down
+  fi
+  cp ./docker/env/dev/app_env ./docker/env/app_env
+  echo "Success"
+  check-env
+  create
+  install
+  check-dir
+  docker-compose -f common.yml -f $CURRENT_ENV.yml build
+  sudo chmod -R 777 ./docker/source/php/dev/app/protected/config/
+  chmod 777 ./docker/source/php/dev/app/protected/config/db.php
+  start
+}
+
 # проверка наличие файла со значением переменной окружения
 check-env(){
     if [ ! -f ./docker/env/app_env ]; then
@@ -163,20 +212,6 @@ restart(){
 check-config(){
     echo "Config status in $CURRENT_ENV environment:"
     docker-compose -f common.yml -f $CURRENT_ENV.yml config
-}
-
-
-#полный мониторинг всех контейнеров
-#Как это работает:
-#Prometheus (метрическая база данных) http://localhost:9090
-#AlertManager (управление оповещениями) http://localhost:9093
-#Grafana (визуализация метрик) http://localhost:3000
-#NodeExporter (сборщик хостовых метрик);
-#cAdvisor (сборщик метрик контейнеров).
-get-monitor(){
-git clone https://github.com/loisoj/dockermonitoring
-cd dockermonitoring
-docker-compose up -d
 }
 
 
@@ -273,6 +308,10 @@ fix-chmod(){
         chmod a+rw ./app/yupe/public/assets ./app/yupe/public/uploads ./app/yupe/protected/runtime -R
         chmod a+rw ./docker/source/php/prod/app/protected/config/modules ./docker/source/php/prod/app/protected/config/modulesBack
         chmod a+rw ./docker/source/php/dev/app/protected/config/modules ./docker/source/php/dev/app/protected/config/modulesBack
+        #тут исправление проблеммы, которая возникала при попытке установить CMS Yupe из за нехватки прав на запись
+        sudo chmod -R 777 ./docker/source/php/dev/app/protected/config/
+        sudo chmod -R 777 ./docker/source/php/prod/app/protected/config/
+        chmod 777 ./docker/source/php/dev/app/protected/config/db.php
         ;;
     esac
 }
@@ -330,3 +369,18 @@ self-destroy)
         showHelp
     fi
 esac
+
+    © 2018 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Status
+    Help
+
+    Contact GitHub
+    API
+    Training
+    Shop
+    Blog
+    About
+
